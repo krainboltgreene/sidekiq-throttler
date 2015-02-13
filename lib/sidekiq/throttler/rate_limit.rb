@@ -98,6 +98,24 @@ module Sidekiq
       end
 
       ##
+      # @return [Integer]
+      #    The max seconds of random delay
+      def random_delay
+        @random_delay ||= (options['random_delay'].respond_to?(:call) ? options['random_delay'].call(*payload) : options['random_delay']).to_f
+      end
+
+      ##
+      # @return [Integer]
+      #   Generate random delay by seconds
+      def generate_random_delay
+        if random_delay
+          rand(0..random_delay)
+        else
+          0
+        end
+      end
+
+      ##
       # Check if rate limiting options were correctly specified on the worker.
       #
       # @return [true, false]

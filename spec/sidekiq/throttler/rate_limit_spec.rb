@@ -349,4 +349,52 @@ describe Sidekiq::Throttler::RateLimit do
 
     include_examples "incrementing"
   end
+
+  describe '#random_delay' do
+    context "no random delay defined" do
+      subject(:rate_limit) do
+        described_class.new(worker, payload, 'jihyo', storage: :redis)
+      end
+
+      it "returns 0" do
+        expect(rate_limit.random_delay).to eq 0
+      end
+    end
+
+    context "random delay is defined" do
+      subject(:rate_limit) do
+        described_class.new(RandomDelayWorker.new, payload, 'jihyo', storage: :redis)
+      end
+
+      it "returns a defined random delay" do
+        1000.times { expect(rate_limit.random_delay).to eq 10.minutes }
+      end
+    end
+  end
+
+  describe '#generate_random_delay' do
+    context "no random delay defined" do
+      subject(:rate_limit) do
+        described_class.new(worker, payload, 'jihyo', storage: :redis)
+      end
+
+      it "returns 0" do
+        expect(rate_limit.generate_random_delay).to eq 0
+      end
+    end
+
+    context "random delay is defined" do
+      subject(:rate_limit) do
+        described_class.new(RandomDelayWorker.new, payload, 'jihyo', storage: :redis)
+      end
+
+      it "returns a random time less than one defined" do
+        1000.times { expect(rate_limit.generate_random_delay).to be < 10.minutes }
+      end
+
+      it "does not return same random delay twice in a row" do
+        expect(rate_limit.generate_random_delay).to_not eql rate_limit.generate_random_delay
+      end
+    end
+  end
 end

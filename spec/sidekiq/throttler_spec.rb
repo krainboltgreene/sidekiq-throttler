@@ -45,11 +45,25 @@ describe Sidekiq::Throttler do
 
     context 'when rate limit is exceeded' do
 
-      it 'requeues the job with a delay' do
-        expect_any_instance_of(Sidekiq::Throttler::RateLimit).to receive(:exceeded?).and_return(true)
-        expect(worker.class).to receive(:perform_in).with(1.minute, *message['args'])
-        throttler.call(worker, message, queue)
+      context 'no random_delay' do
+        it 'requeues the job with a delay' do
+          expect_any_instance_of(Sidekiq::Throttler::RateLimit).to receive(:exceeded?).and_return(true)
+          expect(worker.class).to receive(:perform_in).with(1.minute, *message['args'])
+          throttler.call(worker, message, queue)
+        end
       end
+
+      context 'with random_delay' do
+        it 'requeues the job with a random delay' do
+          expect_any_instance_of(Sidekiq::Throttler::RateLimit).to receive(:exceeded?).and_return(true)
+          expect(RandomDelayWorker).to receive(:perform_in) do |args|
+            expect(args).to be < 20.minutes
+            expect(args).to be >= 10.minutes
+          end
+          throttler.call(RandomDelayWorker.new, message, queue)
+        end
+      end
+
     end
   end
 end

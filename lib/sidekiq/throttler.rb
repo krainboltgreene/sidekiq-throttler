@@ -37,7 +37,8 @@ module Sidekiq
       end
 
       rate_limit.exceeded do |delay|
-        worker.class.perform_in(delay, *msg['args'])
+        job_delay = delay + rate_limit.generate_random_delay
+        worker.class.perform_in(job_delay, *msg['args'])
       end
 
       rate_limit.execute
