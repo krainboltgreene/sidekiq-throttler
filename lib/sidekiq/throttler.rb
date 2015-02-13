@@ -38,7 +38,7 @@ module Sidekiq
       end
 
       rate_limit.exceeded do |delay|
-        TryAgain.reschedule(worker, msg['args'], delay)
+        TryAgain.reschedule(worker, msg['args'], delay + rate_limit.generate_random_delay)
       end
 
       rate_limit.execute
